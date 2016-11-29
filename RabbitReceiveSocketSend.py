@@ -1,5 +1,4 @@
 import pika
-import json
 import jsonpickle
 import socket
 
@@ -10,8 +9,15 @@ channel = connection.channel()
 channel.queue_declare(queue='hello')
 
 def callback(ch, method, properties, body):
-    data = jsonpickle.encode(body)
-    print(" [x] Received %r" % data)
+    dataEncoded = jsonpickle.encode(body)
+    dataDecoded = jsonpickle.decode(dataEncoded)
+
+    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientsocket.connect(('localhost', 8089))
+    clientsocket.send(dataDecoded)
+
+    print(" [x] Received %r" % dataEncoded)
+    print("[x] Sent %r" % dataDecoded)
 
 
 channel.basic_consume(callback,
@@ -20,6 +26,3 @@ channel.basic_consume(callback,
 
 print(' [*] Waiting for messages. To exit press CTRL+C')
 channel.start_consuming()
-
-s = socket.socket()
-host = socket.gethostname()
